@@ -1,7 +1,7 @@
 {
 	"name": "Youtube with DeArrow",
 	"description": "One of the biggest video platforms owned by Google - now with DeArrow support",
-	"author": "FUTO",
+	"author": "FUTO + netux",
 	"authorUrl": "https://futo.org",
 	"platformUrl": "https://youtube.com",
 	"sourceUrl": "https://raw.githubusercontent.com/netux/grayjay-source-youtube/with-dearrow/YoutubeConfig.json",
@@ -135,7 +135,7 @@
 		"captchaUrl": null,
 		"cookiesToFind": ["GOOGLE_ABUSE_EXEMPTION"]
 	},
-	
+
 	"authentication": {
 		"userAgent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.153 Mobile Safari/537.36",
 		"completionUrl": "https://m.youtube.com/youtubei/v1/guide?*",
