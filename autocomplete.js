@@ -61,9 +61,10 @@ class Thumbnails {
     }
 }
 class Thumbnail {
-    constructor(url, quality) {
+    constructor(url, quality, type) {
         this.url = url ?? ""; //string
         this.quality = quality ?? 0; //integer
+        this.type = type ?? ""; //string
     }
 }
 

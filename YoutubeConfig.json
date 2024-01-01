@@ -107,6 +107,26 @@
 			"default": "0",
 			"dependency": "sponsorBlock",
 			"options": ["Manual", "Automatic"]
+		},
+		{
+			"variable": "deArrowHeader",
+			"name": "DeArrow",
+			"description": "DeArrow replaces video titles and thumbnails with better ones, which are more accurate and less prone to sensationalism (Using https://dearrow.ajay.app)",
+			"type": "Header"
+		},
+		{
+			"variable": "deArrowEnabledTitles",
+			"name": "Enable on Titles",
+			"description": "If enabled, replace titles with ones coming from DeArrow.",
+			"type": "Boolean",
+			"default": "true"
+		},
+		{
+			"variable": "deArrowEnabledThumbnails",
+			"name": "Enable on Thumbnails",
+			"description": "If enabled, replace thumbnails with ones coming from DeArrow.",
+			"type": "Boolean",
+			"default": "true"
 		}
 	],
 

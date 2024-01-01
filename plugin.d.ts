@@ -12,10 +12,7 @@ declare class Thumbnails {
     constructor(thumbnails: Thumbnail[])
 }
 declare class Thumbnail {
-    constructor(url, quality) {
-        this.url = url ?? ""; //string
-        this.quality = quality ?? 0; //integer
-    }
+    constructor(url: string, quality: number, type: string);
 }
 
 declare class PlatformID {
