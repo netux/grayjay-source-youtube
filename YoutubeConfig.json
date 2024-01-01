@@ -1,13 +1,13 @@
 {
-	"name": "Youtube",
-	"description": "One of the biggest video platforms owned by Google",
+	"name": "Youtube with DeArrow",
+	"description": "One of the biggest video platforms owned by Google - now with DeArrow support",
 	"author": "FUTO",
 	"authorUrl": "https://futo.org",
 	"platformUrl": "https://youtube.com",
-	"sourceUrl": "https://plugins.grayjay.app/Youtube/YoutubeConfig.json",
-	"repositoryUrl": "https://futo.org",
+	"sourceUrl": "https://raw.githubusercontent.com/netux/grayjay-source-youtube/with-dearrow/YoutubeConfig.json",
+	"repositoryUrl": "https://github.com/netux/grayjay-source-youtube/blob/with-dearrow",
 	"scriptUrl": "./YoutubeScript.js",
-	"version": 160,
+	"version": 161,
 	"iconUrl": "./youtube.png",
 	"id": "35ae969a-a7db-11ed-afa1-0242ac120002",
 
