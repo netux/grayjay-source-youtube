@@ -302,3 +302,24 @@ interface Source {
 }
 
 const source: Source;
+
+interface BridgeHttpResponse {
+    isOk: boolean;
+    code: number;
+    body?: string;
+    headers?: Record<string, string[]>;
+}
+
+interface PackageHttpMethods<R = BridgeHttpResponse> {
+    GET(url: string, headers: Record<string, string[]>): R;
+    POST(url: string, contentType: string, body: string, headers: Record<string, string[]>): R;
+    request(method: string, url: string, headers: Record<string, string[]>): R;
+    requestWithBody(method: string, url: string, body: string, headers: Record<string, string[]>): R;
+}
+interface PackageHttpBatch extends PackageHttpMethods<PackageHttpBatch> {
+    execute(): BridgeHttpResponse[];
+}
+interface PackageHttp extends PackageHttpMethods<BridgeHttpResponse> {
+    batch(): PackageHttpBatch;
+}
+const http: PackageHttp;
