@@ -31,31 +31,44 @@ declare class FilterCapability {
 
 
 declare class PlatformAuthorLink {
-    constructor(id: PlatformID, name: string, url: string, thumbnail: string, subscribers: integer?);
+    constructor(id: PlatformID, name: string, url: string, thumbnail: string, subscribers: number);
 }
 
 declare interface PlatformVideoDef {
     id: PlatformID,
     name: string,
+    alternativeName?: string;
     thumbnails: Thumbnails,
     author: PlatformAuthorLink,
-    uploadDate: integer,
+    uploadDate: number,
     url: string,
 
-    duration: int,
-    viewCount: long,
+    duration: number,
+    viewCount: number,
     isLive: boolean
 }
-declare class PlatformVideo {
+declare class PlatformVideo implements PlatformVideoDef {
+    id: PlatformID;
+    name: string;
+    alternativeName?: string;
+    thumbnails: Thumbnails;
+    author: PlatformAuthorLink;
+    uploadDate: number;
+    url: string;
+    duration: number;
+    viewCount: number;
+    isLive: boolean;
+
     constructor(obj: PlatformVideoDef);
+
 }
 
 
 declare interface PlatformVideoDetailsDef extends PlatformVideoDef {
     description: string,
     video: VideoSourceDescriptor,
-    dash: DashSource?,
-    hls: HLSSource?,
+    dash?: DashSource,
+    hls?: HLSSource,
     live: SubtitleSource[]
 }
 declare class PlatformVideoDetails extends PlatformVideo {
@@ -89,34 +102,34 @@ declare interface IAudioSource {
 
 }
 interface VideoUrlSourceDef implements IVideoSource {
-    width: integer,
-    height: integer,
+    width: number,
+    height: number,
     container: string,
     codec: string,
     name: string,
-    bitrate: integer,
-    duration: integer,
+    bitrate: number,
+    duration: number,
     url: string
 }
 class VideoUrlSource {
     constructor(obj: VideoUrlSourceDef);
 }
 interface YTVideoSourceDef extends VideoUrlSource {
-    itagId: integer,
-    initStart: integer,
-    initEnd: integer,
-    indexStart: integer,
-    indexEnd: integer,
+    itagId: number,
+    initStart: number,
+    initEnd: number,
+    indexStart: number,
+    indexEnd: number,
 }
 class YTVideoSource extends VideoUrlSource {
     constructor(obj: YTVideoSourceDef);
 }
 interface AudioUrlSourceDef {
     name: string,
-    bitrate: integer,
+    bitrate: number,
     container: string,
     codecs: string,
-    duration: integer,
+    duration: number,
     url: string,
     language: string
 }
@@ -124,19 +137,19 @@ class AudioUrlSource implements IAudioSource {
     constructor(obj: AudioUrlSourceDef);
 }
 interface YTAudioSourceDef extends AudioUrlSource {
-    itagId: integer,
-    initStart: integer,
-    initEnd: integer,
-    indexStart: integer,
-    indexEnd: integer,
-    audioChannels: integer
+    itagId: number,
+    initStart: number,
+    initEnd: number,
+    indexStart: number,
+    indexEnd: number,
+    audioChannels: number
 }
 class YTAudioSource extends AudioUrlSource {
     constructor(obj: YTAudioSourceDef);
 }
 interface HLSSourceDef {
     name: string,
-    duration: integer,
+    duration: number,
     url: string
 }
 class HLSSource implements IVideoSource {
@@ -144,7 +157,7 @@ class HLSSource implements IVideoSource {
 }
 interface DashSourceDef {
     name: string,
-    duration: integer,
+    duration: number,
     url: string
 }
 class DashSource implements IVideoSource {
@@ -157,10 +170,10 @@ interface PlatformChannelDef {
     name: string,
     thumbnail: string,
     banner: string,
-    subscribers: integer,
+    subscribers: number,
     description: string,
     url: string,
-    links: Map<string>?
+    links?: Map<string>
 }
 class PlatformChannel {
     constructor(obj: PlatformChannelDef);
@@ -168,16 +181,16 @@ class PlatformChannel {
 
 //Ratings
 interface IRating {
-    type: integer
+    type: number
 }
 declare class RatingLikes implements IRating {
-    constructor(likes: integer);
+    constructor(likes: number);
 }
 declare class RatingLikesDislikes implements IRating {
-    constructor(likes: integer, dislikes: integer);
+    constructor(likes: number, dislikes: number);
 }
 declare class RatingScaler implements IRating {
-    constructor(value: double);
+    constructor(value: number);
 }
 
 declare interface CommentDef {
@@ -185,8 +198,8 @@ declare interface CommentDef {
     author: PlatformAuthorLink,
     message: string,
     rating: IRating,
-    date: long,
-    replyCount: int,
+    date: number,
+    replyCount: number,
     context: any
 }
 declare class Comment {
@@ -196,25 +209,25 @@ declare class Comment {
 
 
 declare class LiveEventPager {
-    nextRequest = 4000;
+    nextRequest: number;
 
-    constructor(results: LiveEvent[], hasMore: boolean, context: any);
+    constructor(results: ILiveEvent[], hasMore: boolean, context: any);
 
     hasMorePagers(): boolean
     nextPage(): LiveEventPager; //Could be self
 }
 
-class LiveEvent {
+class ILiveEvent {
     type: String
 }
 declare class LiveEventComment extends ILiveEvent {
-    constructor(name: string, message: string, thumbnail: string?);
+    constructor(name: string, message: string, thumbnail?: string);
 }
 declare class LiveEventDonation extends ILiveEvent  {
-    constructor(amount: integer, name: string, message: string, thumbnail: string?);
+    constructor(amount: number, name: string, message: string, thumbnail?: string);
 }
 declare class LiveEventViewCount extends ILiveEvent {
-    constructor(viewCount: integer);
+    constructor(viewCount: number);
 }
 declare class LiveEventRaid extends ILiveEvent {
     constructor(targetUrl: string, targetName: string, targetThumbnail: string);
