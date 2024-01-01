@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"types": ["./plugin.d.ts"],
+		"outDir": "./dist"
+	},
+	"files": [
+		"./YoutubeScript.js"
+	],
+	"exclude": [
+		"./autocomplete.js"
+	]
+}
