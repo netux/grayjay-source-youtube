@@ -2,6 +2,6 @@
 
 Fork of <https://gitlab.futo.org/videostreaming/plugins/youtube> with DeArrow support.
 
-Requires a version of Grayjay with alternative metadata support, like mine here: <https://github.com/netux/grayjay-android/tree/feature/alternative-metadata>
+Requires my version of Grayjay with alternative metadata support, which you can get from here: <https://github.com/netux/grayjay-android/releases>
 
 ![Scan to add source](qr.png)
