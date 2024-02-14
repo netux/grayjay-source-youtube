@@ -7,7 +7,7 @@
 	"sourceUrl": "https://plugins.grayjay.app/Youtube/YoutubeConfig.json",
 	"repositoryUrl": "https://futo.org",
 	"scriptUrl": "./YoutubeScript.js",
-	"version": 160,
+	"version": 166,
 	"iconUrl": "./youtube.png",
 	"id": "35ae969a-a7db-11ed-afa1-0242ac120002",
 
@@ -65,6 +65,13 @@
 			"default": "false"
 		},
 		{
+			"variable": "allowControversialRestricted",
+			"name": "Allow Controversial Restricted",
+			"description": "Allow watching of controversial restricted videos",
+			"type": "Boolean",
+			"default": "false"
+		},
+		{
 			"variable": "youtubeDislikerHeader",
 			"name": "Return Youtube Dislike",
 			"description": "This is a third-party database of video dislikes that combines historic data, crowd-sourced data, and estimations, and may not be accurate.\n\n(Using https://returnyoutubedislike.com)",
@@ -80,7 +87,7 @@
 		{
 			"variable": "sponsorBlockHeader",
 			"name": "SponsorBlock",
-			"description": "This is NOT Adblock. SponsorBlock allows you to (automatically) skip in-video sponsor segments.\nIt will harm creators.\n\n(Using https://sponsor.ajay.app)\n\nFUTO respects your decision to use SponsorBlock. But only if you're supprting creators in other ways.",
+			"description": "This is NOT Adblock. SponsorBlock allows you to (automatically) skip in-video sponsor segments.\nIt will harm creators.\n\n(Using https://sponsor.ajay.app)\n\nFUTO respects your decision to use SponsorBlock. But only if you're supporting creators in other ways.",
 			"type": "Header"
 		},
 		{
@@ -137,7 +144,7 @@
 	},
 	
 	"authentication": {
-		"userAgent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.153 Mobile Safari/537.36",
+		"userAgent": "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36",
 		"completionUrl": "https://m.youtube.com/youtubei/v1/guide?*",
 		"loginUrl": "https://accounts.google.com/ServiceLogin?service=youtube&uilel=3&passive=true&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Den%26next%3Dhttps%253A%252F%252Fwww.youtube.com%252Fchannel_switcher&hl=en&ec=65620",
 		"headersToFind": ["authorization"],
@@ -145,7 +152,8 @@
 			".youtube.com": ["authorization"]
 		},
 		"cookiesToFind": ["SIDCC"],
-		"cookiesExclOthers": false
+		"cookiesExclOthers": false,
+		"loginWarning": "You must select a profile after login for authentication to complete."
 	},
 
 	"supportedClaimTypes": [2],

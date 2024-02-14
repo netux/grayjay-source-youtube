@@ -30,6 +30,8 @@ const URL_YOUTUBE_SPONSORBLOCK = "https://sponsor.ajay.app/api/skipSegments?vide
 const URL_YOUTUBE_DEARROW_DATA = "https://sponsor.ajay.app/api/branding";
 const URL_YOUTUBE_DEARROW_THUMBNAIL = "https://dearrow-thumb.ajay.app/api/v1/getThumbnail";
 
+const URL_YOUTUBE_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=";
+
 //Newest to oldest
 const CIPHER_TEST_HASHES = ["4eae42b1", "f98908d1", "0e6aaa83", "d0936ad4", "8e83803a", "30857836", "4cc5d082", "f2f137c6", "1dda5629", "23604418", "71547d26", "b7910ca8"];
 const CIPHER_TEST_PREFIX = "/s/player/";
@@ -52,7 +54,7 @@ const REGEX_VIDEO_URL_SHORT = new RegExp("https://(.*\\.)?youtube\\.com/shorts/(
 const REGEX_VIDEO_URL_CLIP = new RegExp("https://(.*\\.)?youtube\\.com/clip/(.*)[?]?");
 const REGEX_VIDEO_URL_EMBED = new RegExp("https://(.*\\.)?youtube\\.com/embed/([^?]+)");
 
-const REGEX_VIDEO_CHANNEL_URL = new RegExp("https://(.*\\.)?youtube\\.com/channel/.*");
+const REGEX_VIDEO_CHANNEL_URL = new RegExp("https://(.*\\.)?youtube\\.com/channel/(.*)");
 const REGEX_VIDEO_CHANNEL_URL2 = new RegExp("https://(.*\\.)?youtube\\.com/user/.*");
 const REGEX_VIDEO_CHANNEL_URL3 =  new RegExp("https://(.*\\.)?youtube\\.com/@.*");
 
@@ -373,7 +375,7 @@ source.getContentDetails = (url, useAuth) => {
 	const initialData = getInitialData(html);
 	let initialPlayerData = getInitialPlayerData(html);
 
-    if(initialPlayerData.playabilityStatus.status == "UNPLAYABLE")
+    if(initialPlayerData?.playabilityStatus?.status == "UNPLAYABLE")
 		throw new UnavailableException("Video unplayable");
 	
 	const jsUrlMatch = html.match("PLAYER_JS_URL\"\\s?:\\s?\"(.*?)\"");
@@ -392,6 +394,18 @@ source.getContentDetails = (url, useAuth) => {
 			throw new AgeException("Age restricted videos can be allowed using the plugin settings");
 		}
 	}
+	const controversial = initialPlayerData.playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.reason?.simpleText?.indexOf("following content may") > 0 ?? false;
+	if(controversial) {
+		if (_settings["allowControversialRestricted"]) {
+			const sts = _sts[jsUrl];
+			if (!initialPlayerData.streamingData && sts) {
+				initialPlayerData = requestTvHtml5EmbedStreamingData(initialPlayerData.videoDetails.videoId, sts);
+				console.log("Filled missing streaming data using TvHtml5Embed.");
+			}
+		} else {
+			throw new UnavailableException("Controversial restricted videos can be allowed using the plugin settings");
+		}
+	}
 	
 	if (initialPlayerData.playabilityStatus?.status == "LOGIN_REQUIRED") {
 		throw new ScriptException("Login required\nReason: " + initialPlayerData?.playabilityStatus?.reason);
@@ -406,7 +420,7 @@ source.getContentDetails = (url, useAuth) => {
 		url: url
 	}, jsUrl);
 	if(videoDetails == null)
-	    return new UnavailableException("No video found");
+	    throw new UnavailableException("No video found");
 
 	if(!videoDetails.live && 
 		(videoDetails.video?.videoSources == null || videoDetails.video.videoSources.length == 0) &&
@@ -478,6 +492,7 @@ source.getContentDetails = (url, useAuth) => {
 
 	return finalResult;
 };
+
 source.getContentChapters = function(url, initialData) {
     //return [];
     if(REGEX_VIDEO_URL_CLIP.test(url)) {
@@ -994,6 +1009,60 @@ source.getChannelContents = (url, type, order, filters) => {
 
 	return new RichGridPager(tab, contextData);
 };
+/*
+source.peekChannelContents = function(url) {
+    const match = url.match(REGEX_VIDEO_CHANNEL_URL);
+    if(!match || match.length != 3)
+        return {};
+    const id = removeQuery(match[2]);
+    if(!id)
+        return {};
+    const rssUrl = URL_YOUTUBE_RSS + id;
+
+    const xmlResp = http.GET(rssUrl);
+
+    if(!xmlResp.isOk)
+        return null;
+
+    const xml = domParser.parseFromString(xmlResp.body).querySelector("feed");
+    const xmlTree = JSON.parse(xml.toNodeTreeJson())?.children;
+    console.log(xmlTree);
+    if(!xmlTree || xmlTree.length <= 0)
+        return {};
+    const authorNode = xmlTree?.find(x=>x.name == "author");
+    const entryNodes = xmlTree?.filter(x=>x.name == "entry") ?? [];
+    const videos = [];
+
+    const author = new PlatformAuthorLink(
+        new PlatformID(PLATFORM, null, id, PLATFORM_CLAIMTYPE),
+        authorNode.children.find(x=>x.name == "name").value,
+        authorNode.children.find(x=>x.name == "uri").value,
+        ""
+    )
+
+    for(let entry of entryNodes) {
+        const group = entry.children.find(x=>x.name == 'media:group');
+        const community = group.children.find(x=>x.name == "media:community");
+
+        videos.push(new PlatformVideo({
+			id: new PlatformID(PLATFORM, entry.children.find(x=>x.name == 'yt:videoid').value, config.id),
+			name: group.children.find(x=>x.name == 'media:title').value,
+			thumbnails: new Thumbnails([
+			    new Thumbnail(group.children.find(x=>x.name == 'media:thumbnail')?.attributes["url"], 1)
+			]),
+			author: author,
+			uploadDate: parseInt(new Date(entry.children.find(x=>x.name == "updated").value).getTime() / 1000),
+			duration: 0,
+			viewCount: parseInt(community.children.find(x=>x.name == "media:statistics").attributes["views"]) ?? 0,
+			url: entry.children.find(x=>x.name == "link").attributes["href"],
+			isLive: false
+		}));
+    }
+
+    const result = {};
+    result[Type.Feed.Mixed] = videos;
+    return result;
+}; */
 
 source.searchPlaylists = function(query, type, order, filters) {
     const data = requestSearch(query, false, SEARCH_PLAYLISTS_PARAM);
@@ -1183,12 +1252,16 @@ source.getUserPlaylists = function() {
 source.getUserSubscriptions = function() {
 	if (!bridge.isLoggedIn()) {
 		bridge.log("Failed to retrieve subscriptions page because not logged in.");
-		return [];
+		throw new ScriptException("Not logged in");
 	}
 	
 	let subsPage = requestPage(URL_SUB_CHANNELS_M, { "User-Agent": USER_AGENT_PHONE }, true);
 	let result = getInitialData(subsPage);
 
+	if(!result) {
+	    log(subsPage);
+		throw new ScriptException("No initial data found or page unavailable");
+    }
 	if(IS_TESTING) {
 		console.log("Initial Data:", result);
 	}
@@ -1792,7 +1865,7 @@ function requestNext(body, useAuth = false) {
 	}
 	return JSON.parse(resp.body);
 }
-function requestBrowse(body, useMobile = false, useAuth = false) {
+function requestBrowse(body, useMobile = false, useAuth = false, attempt = 0) {
 	const clientContext = getClientContext(useAuth);
 	if(!clientContext || !clientContext.INNERTUBE_CONTEXT || !clientContext.INNERTUBE_API_KEY)
 		throw new ScriptException("Missing client context");
@@ -1807,8 +1880,17 @@ function requestBrowse(body, useMobile = false, useAuth = false) {
 	const url = baseUrl + "?key=" + clientContext.INNERTUBE_API_KEY + "&prettyPrint=false";
 	const resp = http.POST(url, JSON.stringify(body), headers, useAuth);
 	if(!resp.isOk) {
+	    if((resp.code == 408 || resp.code == 500) && attempt < 1) {
+	        return requestBrowse(body, useMobile, useAuth, attempt + 1);
+	    }
+
 		log("Fail Url: " + url + "\nFail Body:\n" + JSON.stringify(body));
-		throw new ScriptException("Failed to browse [" + resp.code + "]");
+
+		if(resp.code != 500 || !bridge.isLoggedIn())
+		    throw new ScriptException("Failed to browse [" + resp.code + "]");
+		else {
+		    throw new ScriptLoginRequiredException("Failed to browse [" + resp.code + "]\nLogin might have expired, try logging in again");
+		}
 	}
 	return JSON.parse(resp.body);
 }
@@ -2822,6 +2904,48 @@ function requestCommentPager(contextUrl, continuationToken) {
 			}
 		}
 	}
+
+	if(data?.frameworkUpdates?.entityBatchUpdate?.mutations) {
+		log("New comments model");
+		const mutations = data.frameworkUpdates.entityBatchUpdate.mutations;
+		if(mutations.length > 0) {
+			let commentsContinuation = null;
+			const comments = [];
+			
+			let parentItems = [];
+			for(let i = 0; i < endpoints.length; i++)
+				parentItems.push(...(endpoints[i].reloadContinuationItemsCommand?.continuationItems ??
+					endpoints[i].appendContinuationItemsAction?.continuationItems ?? 
+					[]));
+			parentItems = parentItems.filter(x=>x.commentThreadRenderer);
+			const commentObjects = mutations.filter(x=>x?.payload?.commentEntityPayload);
+
+			for(let commentObject of commentObjects) {
+				const cobj = commentObject?.payload?.commentEntityPayload ?? {};
+				const parent = parentItems.find(x=>x.commentThreadRenderer?.commentViewModel?.commentViewModel?.commentKey == commentObject.entityKey);
+				const replyContents = parent?.commentThreadRenderer?.replies?.commentRepliesRenderer?.contents;
+				const replyContinuation = ((replyContents?.length ?? 0) > 0) ? replyContents[0].continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token : null;
+				
+				const authorEndpoint = cobj.author?.channelCommand?.innertubeCommand?.commandMetadata?.webCommandMetadata?.url;
+				comments.push(new YTComment({
+					contextUrl: contextUrl,
+					author: new PlatformAuthorLink(new PlatformID(PLATFORM, null, config.id, PLATFORM_CLAIMTYPE), cobj.author.displayName, (authorEndpoint) ? URL_BASE + authorEndpoint : "", cobj.author.avatarThumbnailUrl),
+					message: cobj.properties?.content?.content ?? "",
+					rating: new RatingLikes(extractHumanNumber_Integer(cobj.toolbar?.likeCountLiked) ?? 0),
+					date: (extractAgoTextRuns_Timestamp(cobj?.properties?.publishedTime) ?? 0),
+					replyCount: extractFirstNumber_Integer(cobj?.toolbar?.replyCount) ?? 0,
+					context: { replyContinuation: replyContinuation }
+				}));
+			}
+			
+
+			if(comments.length > 0) {
+				return new YTCommentPager(comments, commentsContinuation, contextUrl);
+			}
+		}
+	}
+
+
 	log("Comment object:\n" + JSON.stringify(data, null, "   "));
 	throw new ScriptException("No valid comment endpoint provided by Youtube");
 }
@@ -3353,7 +3477,7 @@ function extractVideoWithContextRenderer_AuthorLink(videoRenderer) {
 }
 function extractVideoRenderer_AuthorLink(videoRenderer) {
 	const id = videoRenderer.channelThumbnailSupportedRenderers.channelThumbnailWithLinkRenderer?.navigationEndpoint?.browseEndpoint?.browseId;
-	const name = extractRuns_String(videoRenderer.ownerText.runs);
+	const name = extractText_String(videoRenderer.ownerText)//extractRuns_String(videoRenderer.ownerText.runs);
 	const channelIcon = videoRenderer.channelThumbnailSupportedRenderers.channelThumbnailWithLinkRenderer;
 	const thumbUrl = channelIcon.thumbnail.thumbnails[0].url;
 	const channelUrl = (!id) ? extractRuns_Url(videoRenderer.ownerText.runs) : URL_BASE + "/channel/" + id;
